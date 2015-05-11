@@ -44,7 +44,7 @@ public:
 	void Create(ID3D11Device* device);
 	void BeginPass(ID3D11DeviceContext* context,
 		DirectX::XMMATRIX* pMatView, DirectX::XMMATRIX* pMatProj, DirectX::XMMATRIX* pMatOrtho);
-	void SetConstantBuffers(ID3D11DeviceContext* context, DirectX::XMMATRIX* pMatWorld);
+	void SetConstantBuffers(ID3D11DeviceContext* context, DirectX::XMMATRIX* pMatWorld, float TessFactor, float InsideTess);
 	void EndPass(ID3D11DeviceContext* context);
 
 };

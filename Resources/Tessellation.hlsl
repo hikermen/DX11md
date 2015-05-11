@@ -35,8 +35,8 @@ struct VS_OUT
 // ハルシェーダーのパッチ定数フェーズ用の出力パラメータ
 struct CONSTANT_HS_OUT
 {
-	float Edges[4] : SV_TessFactor;        // パッチのエッジのテッセレーション係数
-	float Inside[2] : SV_InsideTessFactor; // パッチ内部のテッセレーション係数
+	float Edges[3] : SV_TessFactor;        // パッチのエッジのテッセレーション係数
+	float Inside : SV_InsideTessFactor; // パッチ内部のテッセレーション係数
 };
 
 // ハルシェーダーのコントロール ポイント フェーズ用の出力パラメータ
@@ -69,14 +69,13 @@ VS_OUT VS_Main(VS_IN In)
 // *****************************************************************************************
 // ハルシェーダーのパッチ定数フェーズ
 // *****************************************************************************************
-CONSTANT_HS_OUT ConstantsHS_Main(InputPatch<VS_OUT, 4> ip, uint PatchID : SV_PrimitiveID)
+CONSTANT_HS_OUT ConstantsHS_Main(InputPatch<VS_OUT, 3> ip, uint PatchID : SV_PrimitiveID)
 {
 	CONSTANT_HS_OUT Out;
 
 	// 定数バッファの値をそのまま渡す
-	Out.Edges[0] = Out.Edges[1] = Out.Edges[2] = Out.Edges[3] = g_TessFactor;  // パッチのエッジのテッセレーション係数
-	Out.Inside[0] = g_InsideTessFactor;  // パッチ内部の横方法のテッセレーション係数
-	Out.Inside[1] = g_InsideTessFactor;  // パッチ内部の縦方法のテッセレーション係数
+	Out.Edges[0] = Out.Edges[1] = Out.Edges[2] = g_TessFactor;  // パッチのエッジのテッセレーション係数
+	Out.Inside = g_InsideTessFactor;  // パッチ内部のテッセレーション係数
 
 	return Out;
 }
@@ -84,12 +83,12 @@ CONSTANT_HS_OUT ConstantsHS_Main(InputPatch<VS_OUT, 4> ip, uint PatchID : SV_Pri
 // *****************************************************************************************
 // ハルシェーダーのコントロール ポイント フェーズ
 // *****************************************************************************************
-[domain("quad")]                             // テッセレートするメッシュの形状を指定する
+[domain("tri")]                             // テッセレートするメッシュの形状を指定する
 [partitioning("integer")]                    // パッチの分割に使用するアルゴリズムを指定する
 [outputtopology("triangle_ccw")]             // メッシュの出力方法を指定する
-[outputcontrolpoints(4)]                     // ハルシェーダーのコントロール ポイント フェーズがコールされる回数
+[outputcontrolpoints(3)]                     // ハルシェーダーのコントロール ポイント フェーズがコールされる回数
 [patchconstantfunc("ConstantsHS_Main")]      // 対応するハルシェーダーのパッチ定数フェーズのメイン関数
-HS_OUT HS_Main(InputPatch<VS_OUT, 4> In, uint i : SV_OutputControlPointID, uint PatchID : SV_PrimitiveID)
+HS_OUT HS_Main(InputPatch<VS_OUT, 3> In, uint i : SV_OutputControlPointID, uint PatchID : SV_PrimitiveID)
 {
 	HS_OUT Out;
 
@@ -102,23 +101,18 @@ HS_OUT HS_Main(InputPatch<VS_OUT, 4> In, uint i : SV_OutputControlPointID, uint 
 // *****************************************************************************************
 // ドメインシェーダー
 // *****************************************************************************************
-[domain("quad")]
-DS_OUT DS_Main(CONSTANT_HS_OUT In, float2 uv : SV_DomainLocation, const OutputPatch<HS_OUT, 4> patch)
+[domain("tri")]
+DS_OUT DS_Main(CONSTANT_HS_OUT In, float3 uvw : SV_DomainLocation, const OutputPatch<HS_OUT, 3> patch)
 {
 	DS_OUT Out;
 
 	// 頂点座標
-	float3 p1 = lerp(patch[1].pos, patch[0].pos, uv.x);
-		float3 p2 = lerp(patch[3].pos, patch[2].pos, uv.x);
-		float3 p3 = lerp(p1, p2, uv.y);
-
-		Out.pos = mul(float4(p3, 1.0f), g_matWVP);
+	float3 p1 = patch[2].pos * uvw.x + patch[1].pos * uvw.y + patch[0].pos * uvw.z;
+		Out.pos = mul(float4(p1, 1.0f), g_matWVP);
 
 	// テクセル
-	float2 t1 = lerp(patch[1].texel, patch[0].texel, uv.x);
-		float2 t2 = lerp(patch[3].texel, patch[2].texel, uv.x);
-		float2 t3 = lerp(t1, t2, uv.y);
-		Out.texel = t3;
+	float2 t1 = patch[2].texel * uvw.x + patch[1].texel * uvw.y + patch[0].texel * uvw.z;
+		Out.texel = t1;
 
 	return Out;
 }

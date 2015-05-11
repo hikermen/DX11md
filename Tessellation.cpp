@@ -64,6 +64,7 @@ void Tessellation::BeginPass(ID3D11DeviceContext* context,
 	m_MatProj = *pMatProj;
 	m_MatOrtho = *pMatOrtho;
 
+
 	//各種ステートを設定する
 	m_pGraphicsPipeline->SetRasterizerState(context);
 	m_pGraphicsPipeline->SetDepthStencilState(context);
@@ -83,7 +84,7 @@ void Tessellation::CreateMatWVP(DirectX::XMMATRIX* pMatWorld, DirectX::XMMATRIX*
 	*pRetMatCWVP = DirectX::XMMatrixTranspose(*pRetMatCWVP);
 }
 
-void Tessellation::SetConstantBuffers(ID3D11DeviceContext* context, DirectX::XMMATRIX* pMatWorld)
+void Tessellation::SetConstantBuffers(ID3D11DeviceContext* context, DirectX::XMMATRIX* pMatWorld, float TessFactor, float InsideTess)
 {
 	HRESULT hr = E_FAIL;
 
@@ -101,17 +102,18 @@ void Tessellation::SetConstantBuffers(ID3D11DeviceContext* context, DirectX::XMM
 
 	context->Unmap(m_pConstantBuffers[0], 0);
 
-	context->HSSetConstantBuffers(1, 1, &m_pConstantBuffers[1]);
 
-	if (FAILED(hr = context->Map(m_pConstantBuffers[0], 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+	if (FAILED(hr = context->Map(m_pConstantBuffers[1], 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
 		throw(Exception(-1, _T("ShadowMap::SetConstantBuffers()でエラーが発生しました。Mapが失敗しました。")));
 
 	Tessellation::CBUFFER1* cbuffer2 = (Tessellation::CBUFFER1*)mappedResource.pData;
 
-	cbuffer2->TessFactor = 1.0f;
-	cbuffer2->InsideTessFactor = 1.0f;
+	cbuffer2->TessFactor = TessFactor;
+	cbuffer2->InsideTessFactor = InsideTess;
 
 	context->Unmap(m_pConstantBuffers[1], 0);
+
+	context->HSSetConstantBuffers(1, 1, &m_pConstantBuffers[1]);
 
 	context->DSSetConstantBuffers(0, 1, &m_pConstantBuffers[0]);
 

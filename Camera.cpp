@@ -40,9 +40,9 @@ void DebugCamera::Update()
 	if (GetKeyState(VK_DOWN) & 0x8000)
 		m_matView *= DirectX::XMMatrixTranslation(0, 0, 0.1f);
 	if (GetKeyState(VK_RIGHT) & 0x8000)
-		m_matView *= DirectX::XMMatrixRotationY(-0.002f);
+		m_matView *= DirectX::XMMatrixRotationY(-0.001f);
 	if (GetKeyState(VK_LEFT) & 0x8000)
-		m_matView *= DirectX::XMMatrixRotationY(0.002f);
+		m_matView *= DirectX::XMMatrixRotationY(0.001f);
 	if (GetKeyState('Q') & 0x8000)
 		m_vecLightPos = DirectX::XMFLOAT4(20.0f, 200.0f, 300.0f, 0);
 	if (GetKeyState('A') & 0x8000)

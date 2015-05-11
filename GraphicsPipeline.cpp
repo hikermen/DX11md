@@ -93,7 +93,7 @@ void GraphicsPipeline::CreateHullShaderFromFile(ID3D11Device* device, TCHAR pSrc
 {
 	auto hs = dx11::d3::shader::CompileShader(pSrcFile, pFunctionName, "hs_5_0");
 
-	m_pHullShader = dx11::d3::shader::CreatePixelShader(device, hs.get());
+	m_pHullShader = dx11::d3::shader::CreateHullShader(device, hs.get());
 }
 
 // ハルシェーダーをメモリから作成する
@@ -125,7 +125,7 @@ void GraphicsPipeline::CreateRasterizerState(ID3D11Device* pD3D11Device, D3D11_C
 	D3D11_RASTERIZER_DESC RasterizerDesc;
 
 	::ZeroMemory(&RasterizerDesc, sizeof(RasterizerDesc));
-	RasterizerDesc.FillMode = D3D11_FILL_SOLID;    // ポリゴン面描画
+	RasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;    // ポリゴン面描画
 	RasterizerDesc.CullMode = CullMode;            // 指定の方向を向いている三角形をカリングする
 	RasterizerDesc.FrontCounterClockwise = TRUE;   // 反時計回りを表面
 	RasterizerDesc.DepthBias = 0;

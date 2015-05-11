@@ -5,6 +5,7 @@
 #include "Camera.h"
 
 
+#include "Tessellation.h"
 #include "PlaneMesh.h"
 #include "CubeMesh.h"
 
@@ -14,9 +15,12 @@ TCHAR* AppName = _T("Direct3D11");
 UCDirect3D11* g_pDirect3D11 = nullptr;
 
 ShadowMap* g_pShadowMap = nullptr;
+Tessellation* g_pTesselation = nullptr;
 
 PlaneMesh* g_pPlaneMesh = nullptr;
 CubeMesh* g_pCubeMesh = nullptr;
+TestMesh* g_pTestMesh = nullptr;
+
 
 
 DWORD g_Width = 640, g_Height = 480;
@@ -31,7 +35,10 @@ void Invalidate()
 	SAFE_DELETE(g_pCamera);
 	SAFE_DELETE(g_pDirect3D11);
 	SAFE_DELETE(g_pShadowMap);
+	SAFE_DELETE(g_pTesselation);
+
 	SAFE_DELETE(g_pPlaneMesh);
+	SAFE_DELETE(g_pTestMesh);
 	SAFE_DELETE(g_pCubeMesh);
 }
 
@@ -98,7 +105,7 @@ void CreateDirect3D(HINSTANCE hInstance)
 void CreateGraphicsPipeline()
 {
 	g_pShadowMap->Create(g_pDirect3D11->m_pD3DDevice, 1024, 1024);
-
+	g_pTesselation->Create(g_pDirect3D11->m_pD3DDevice);
 }
 
 void CreateMesh()
@@ -106,8 +113,11 @@ void CreateMesh()
 	g_pPlaneMesh = NEW PlaneMesh();
 	g_pPlaneMesh->CreateMesh(g_pDirect3D11->m_pD3DDevice);
 
-	g_pCubeMesh = NEW CubeMesh();
-	g_pCubeMesh->CreateMesh(g_pDirect3D11->m_pD3DDevice);
+	//g_pCubeMesh = NEW CubeMesh();
+	//g_pCubeMesh->CreateMesh(g_pDirect3D11->m_pD3DDevice);
+
+	g_pTestMesh = NEW TestMesh();
+	g_pTestMesh->CreateMesh(g_pDirect3D11->m_pD3DDevice);
 }
 
 void CreateResource(HINSTANCE hInstance)
@@ -122,6 +132,8 @@ void CreateResource(HINSTANCE hInstance)
 
 	g_pShadowMap = NEW ShadowMap();
 
+	g_pTesselation = NEW Tessellation();
+
 	CreateDirect3D(hInstance);
 
 	CreateGraphicsPipeline();
@@ -133,7 +145,8 @@ void Update()
 {
 	g_pCamera->Update();
 	g_pPlaneMesh->Update();
-	g_pCubeMesh->Update();
+	//g_pCubeMesh->Update();
+	g_pTestMesh->Update();
 }
 
 HRESULT Render()
@@ -145,7 +158,7 @@ HRESULT Render()
 	g_pDirect3D11->ClearBackBuffer(ClearColor);
 
 	g_pDirect3D11->ClearDepthStencilView(D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
+	/*
 	for (UINT i = 0; i < g_pShadowMap->GetMaxPass(); i++)
 	{
 		g_pShadowMap->BeginPass(g_pDirect3D11->m_pD3DDeviceContext, g_pCamera->GetView(), g_pCamera->GetProjection(), g_pCamera->GetOrtho(), g_pCamera->GetVecLightPos(), i);
@@ -156,7 +169,17 @@ HRESULT Render()
 		g_pCubeMesh->Render(g_pDirect3D11->m_pD3DDeviceContext);
 
 		g_pShadowMap->EndPass(g_pDirect3D11->m_pD3DDeviceContext, i);
+
+
 	}
+	*/
+	g_pTesselation->BeginPass(g_pDirect3D11->m_pD3DDeviceContext, g_pCamera->GetView(), g_pCamera->GetProjection(), g_pCamera->GetOrtho());
+
+	g_pTesselation->SetConstantBuffers(g_pDirect3D11->m_pD3DDeviceContext, g_pTestMesh->GetMatWorld(), g_pTestMesh->GetTessArg()->x,g_pTestMesh->GetTessArg()->y );
+
+	g_pTestMesh->Render(g_pDirect3D11->m_pD3DDeviceContext);
+
+	g_pTesselation->EndPass(g_pDirect3D11->m_pD3DDeviceContext);
 
 	// レンダリングされたイメージをユーザーに表示。
 	if (FAILED(hr = g_pDirect3D11->Present(0, 0)))
